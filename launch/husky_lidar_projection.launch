@@ -1,0 +1,25 @@
+<launch>
+
+    <!-- Nodes -->
+    <group ns="/front_camera">
+        <remap from="camera_info" to="/zed_node/left/camera_info" />
+        <remap from="image" to="/zed_node/left/image_rect_color/compressed" />
+        <remap from="lidar" to="/velodyne_points" />
+
+        <remap from="pub_image" to="/zed_node/left/lidar_projected/compressed" />
+
+        <node pkg="lidar_to_cam" type="lidar_projection_node.py" name="lidar_projection_node" output="screen">
+        </node>
+    </group>
+    <group ns="/back_camera">
+        <remap from="camera_info" to="/realsense_back/color/camera_info" />
+        <remap from="image" to="/realsense_back/color/image_raw/compressed" />
+        <remap from="lidar" to="/velodyne_points" />
+
+        <remap from="pub_image" to="/realsense_back/lidar_projected/compressed" />
+
+        <node pkg="lidar_to_cam" type="lidar_projection_node.py" name="lidar_projection_node" output="screen">
+        </node>
+    </group>
+
+</launch>

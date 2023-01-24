@@ -1,22 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from typing import Tuple
 
-import numpy as np
 import cv2
-
-import matplotlib.pyplot as plt
 import matplotlib
-
-import rospy
+import matplotlib.pyplot as plt
 import message_filters
+import numpy as np
+import rospy
 import tf
-
-from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
-
 from cv_bridge import CvBridge
+from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
 from sensor_msgs.msg import CameraInfo, CompressedImage, PointCloud2
-
 
 # using non-GUI backend solves OOM issue and fasten the processing
 matplotlib.use("Agg")
@@ -24,7 +19,7 @@ matplotlib.use("Agg")
 
 def project_points_to_camera(
     points: np.ndarray, proj_matrix: np.ndarray, cam_res: Tuple[int, int]
-):
+) -> Tuple[np.ndarray, np.ndarray]:
     if points.shape[0] == 3:
         points = np.vstack((points, np.ones((1, points.shape[1]))))
     if len(points.shape) != 2 or points.shape[0] != 4:
@@ -40,18 +35,11 @@ def project_points_to_camera(
     w = uvw[2, :]
     uv[0, :] /= w
     uv[1, :] /= w
-    in_image = (
-        (uv[0, :] >= 0)
-        * (uv[0, :] < cam_res[0])
-        * (uv[1, :] >= 0)
-        * (uv[1, :] < cam_res[1])
-    )
+    in_image = (uv[0, :] >= 0) * (uv[0, :] < cam_res[0]) * (uv[1, :] >= 0) * (uv[1, :] < cam_res[1])
     return uv[:, in_image].astype(int), depths[in_image]
 
 
-def depths_to_colors(
-    depths: np.ndarray, max_depth: int = 100, cmap: str = "hsv"
-) -> np.ndarray:
+def depths_to_colors(depths: np.ndarray, max_depth: int = 100, cmap: str = "hsv") -> np.ndarray:
     depths /= max_depth
     to_colormap = plt.get_cmap(cmap)
     rgba_values = to_colormap(depths, bytes=True)
@@ -94,10 +82,8 @@ class LidarProjectionNode:
         im_frame = compressed_image_msg.header.frame_id
         lidar_frame = lidar_msg.header.frame_id
         try:
-            (trans, rot) = self.tf_listener.lookupTransform(
-                im_frame, lidar_frame, rospy.Time(0)
-            )
-            rospy.logdebug(f"received transform: {trans, rot}")
+            (trans, rot) = self.tf_listener.lookupTransform(im_frame, lidar_frame, rospy.Time(0))
+            rospy.logdebug(f"Received transform from {lidar_frame} to {im_frame}: {trans, rot}")
         except (
             tf.LookupException,
             tf.ConnectivityException,
@@ -118,14 +104,10 @@ class LidarProjectionNode:
         rospy.logdebug(f"ts_diff = {ts_diff:.3f} ms")
 
         image = self.br.compressed_imgmsg_to_cv2(compressed_image_msg)
-        rospy.logdebug(f"image.shape = {image.shape}")
 
         lidar_points = pointcloud2_to_xyz_array(lidar_msg, remove_nans=True).T
         if lidar_points.shape[0] == 3:
-            lidar_points = np.vstack(
-                (lidar_points, np.ones((1, lidar_points.shape[1])))
-            )
-        rospy.logdebug(f"lidar_points.shape = {lidar_points.shape}")
+            lidar_points = np.vstack((lidar_points, np.ones((1, lidar_points.shape[1]))))
 
         lidar_points = tf_lidar2cam @ lidar_points
 
@@ -137,7 +119,7 @@ class LidarProjectionNode:
 
         new_msg = self.br.cv2_to_compressed_imgmsg(image)
         self.pub_image.publish(new_msg)
-        rospy.logdebug("published image")
+        rospy.logdebug("Published image")
 
 
 if __name__ == "__main__":
