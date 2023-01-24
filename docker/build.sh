@@ -18,6 +18,4 @@ fi
 
 docker build . \
     -f $BASE_PATH/Dockerfile \
-    --build-arg UID=$(id -u) \
-    --build-arg GID=$(id -g) \
     -t x86_64noetic/lidar_projection_node
