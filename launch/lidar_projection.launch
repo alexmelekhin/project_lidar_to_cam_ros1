@@ -1,0 +1,37 @@
+<launch>
+
+    <!-- Настройка топиков -->
+    <arg name="namespace_front" default="/front" />
+    <arg name="namespace_back" default="/back" />
+    
+    <arg name="front_camera_info_topic" default="/zed_node/left/camera_info" />
+    <arg name="front_image_topic" default="/zed_node/left/image_rect_color/compressed" />
+    <arg name="front_pub_image_topic" default="/zed_node/left/lidar_projected/compressed" />
+
+    <arg name="back_camera_info_topic" default="/realsense_back/color/camera_info" />
+    <arg name="back_image_topic" default="/realsense_back/color/image_raw/compressed" />
+    <arg name="back_pub_image_topic" default="/realsense_back/lidar_projected/compressed" />
+
+    <arg name="lidar_topic" default="/velodyne_points" />
+
+    <!-- Nodes -->
+    <group ns="$(arg namespace_front)">
+        <remap from="camera_info" to="$(arg front_camera_info_topic)" />
+        <remap from="image" to="$(arg front_image_topic)" />
+        <remap from="lidar" to="$(arg lidar_topic)" />
+        <remap from="pub_image" to="$(arg front_pub_image_topic)" />
+
+        <node pkg="lidar_to_cam" type="lidar_projection_node.py" name="lidar_projection_node" output="screen">
+        </node>
+    </group>
+    <group ns="$(arg namespace_back)">
+        <remap from="camera_info" to="$(arg back_camera_info_topic)" />
+        <remap from="image" to="$(arg back_image_topic)" />
+        <remap from="lidar" to="$(arg lidar_topic)" />
+        <remap from="pub_image" to="$(arg back_pub_image_topic)" />
+
+        <node pkg="lidar_to_cam" type="lidar_projection_node.py" name="lidar_projection_node" output="screen">
+        </node>
+    </group>
+
+</launch>
