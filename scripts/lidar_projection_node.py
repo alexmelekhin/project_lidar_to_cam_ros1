@@ -58,7 +58,7 @@ class LidarProjectionNode:
         self.sub_image = message_filters.Subscriber("image", CompressedImage)
         self.sub_lidar = message_filters.Subscriber("lidar", PointCloud2)
 
-        self.pub_image = rospy.Publisher("pub_image", CompressedImage)
+        self.pub_image = rospy.Publisher("pub_image", CompressedImage, queue_size=1)
 
         self.tf_listener = tf.TransformListener()
 
